@@ -52,7 +52,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs opencv` NiTE-Linux-x64-2.2/Redist/libNiTE2.jni.so NiTE-Linux-x64-2.2/Redist/libNiTE2.so OpenNI2/Bin/x64-Release/libDepthUtils.a OpenNI2/Bin/x64-Release/libMWClosestPoint.so OpenNI2/Bin/x64-Release/libOpenNI2.jni.so OpenNI2/Bin/x64-Release/libOpenNI2.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libDummyDevice.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libOniFile.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPS1080.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPSLink.so  
+LDLIBSOPTIONS=`pkg-config --libs opencv` NiTE-Linux-x64-2.2/Redist/libNiTE2.jni.so NiTE-Linux-x64-2.2/Redist/libNiTE2.so OpenNI2/Bin/x64-Release/libDepthUtils.a OpenNI2/Bin/x64-Release/libMWClosestPoint.so OpenNI2/Bin/x64-Release/libOpenNI2.jni.so OpenNI2/Bin/x64-Release/libOpenNI2.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libDummyDevice.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libOniFile.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPS1080.so OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPSLink.so -lOpenNI2  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
