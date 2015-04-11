@@ -10,6 +10,7 @@
 #define MAX_USERS 10
 bool g_visibleUsers[MAX_USERS] = {false};
 nite::SkeletonState g_skeletonStates[MAX_USERS] = {nite::SKELETON_NONE};
+int c = 100;
 
 
 
@@ -55,10 +56,13 @@ int main(int argc, char** argv) {
     int rc;
     openni::Device device;
     const char* deviceURI = openni::ANY_DEVICE;
-    openni::VideoStream color;
-    openni::VideoFrameRef pFrame;
-    cv::Mat frame = cv::Mat(cv::Size(320, 240), CV_8UC3);
+        openni::VideoStream depth, color;
+    openni::VideoFrameRef pFrame, dep;
+    cv::Mat frame = cv::Mat::zeros(cv::Size(320, 240), CV_8UC3);
 
+        cv::namedWindow("OpenCV", CV_WINDOW_KEEPRATIO);
+
+        
 
     nite::UserTracker userTracker;
     nite::Status niteRc;
@@ -68,13 +72,36 @@ int main(int argc, char** argv) {
     rc = openni::OpenNI::initialize();
     rc = device.open(deviceURI);
     if (rc != openni::STATUS_OK) {
-
-        int a = 0;
         printf("SimpleViewer: Device open failed:\n%s\n", openni::OpenNI::getExtendedError());
         return 1;
 
     }
+    rc = depth.create(device, openni::SENSOR_DEPTH);
 
+    if (rc == openni::STATUS_OK) {
+
+        rc = depth.start();
+        if (rc != openni::STATUS_OK) {
+            printf("SimpleViewer: Couldn't start depth stream:\n%s\n", openni::OpenNI::getExtendedError());
+            depth.destroy();
+        }
+    } else {
+        printf("SimpleViewer: Couldn't find depth stream:\n%s\n", openni::OpenNI::getExtendedError());
+    }
+    rc = color.create(device, openni::SENSOR_COLOR);
+    if (rc == openni::STATUS_OK) {
+        rc = color.start();
+        if (rc != openni::STATUS_OK) {
+            printf("SimpleViewer: Couldn't start color stream:\n%s\n", openni::OpenNI::getExtendedError());
+            color.destroy();
+        }
+    } else {
+        printf("SimpleViewer: Couldn't find color stream:\n%s\n", openni::OpenNI::getExtendedError());
+    }
+
+    
+    
+    
     niteRc = userTracker.create();
     if (niteRc != nite::STATUS_OK) {
         printf("Couldn't create user tracker\n");
@@ -84,6 +111,8 @@ int main(int argc, char** argv) {
 
     nite::UserTrackerFrameRef userTrackerFrame;
     while (!wasKeyboardHit()) {
+        
+        
         niteRc = userTracker.readFrame(&userTrackerFrame);
 
         if (niteRc != nite::STATUS_OK) {
@@ -92,21 +121,47 @@ int main(int argc, char** argv) {
         }
 
         const nite::Array<nite::UserData>& users = userTrackerFrame.getUsers();
+        nite::SkeletonJoint head;
         for (int i = 0; i < users.getSize(); ++i) {
             const nite::UserData& user = users[i];
             updateUserState(user, userTrackerFrame.getTimestamp());
             if (user.isNew()) {
                 userTracker.startSkeletonTracking(user.getId());
             } else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED) {
-                const nite::SkeletonJoint& head = user.getSkeleton().getJoint(nite::JOINT_HEAD);
+                head = user.getSkeleton().getJoint(nite::JOINT_HEAD);
                 if (head.getPositionConfidence() > .5)
                     printf("%d. (%5.2f, %5.2f, %5.2f)\n", user.getId(), head.getPosition().x, head.getPosition().y, head.getPosition().z);
             }
         }
+        
+        
 
         /*display image data*/
         color.readFrame(&pFrame);
+        depth.readFrame(&dep);
         openni::RGB888Pixel *pColor = (openni::RGB888Pixel *) pFrame.getData();
+        openni::DepthPixel* pDepth = (openni::DepthPixel *) dep.getData();
+        
+        for (int i = 0; i < frame.rows; i++) {
+            for (int j = 0; j < frame.cols; j++) {
+                openni::RGB888Pixel pix = pColor[frame.cols * i + j];
+                frame.at<cv::Vec3b>(i, j) = cv::Vec3b(pix.r, pix.g, pix.b);
+            }
+        }
+        
+        int X, Y;
+        openni::DepthPixel Z;
+        openni::CoordinateConverter::convertWorldToDepth(depth, head.getPosition().x, head.getPosition().y, head.getPosition().z, &X, &Y, &Z);
+
+        
+        Point head_point = cv::Point(X, Y);
+        circle(frame, head_point, 10, Scalar(0,255,0));
+        
+        cv::imshow("OpenCV", frame);
+        
+         c = cv::waitKey(10);
+        if (c == 27)
+            break;
 
     }
 
