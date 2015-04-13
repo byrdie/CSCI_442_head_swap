@@ -155,6 +155,7 @@ int main(int argc, char** argv) {
 
         
         Point head_point = cv::Point(X, Y);
+        cv::cvtColor(frame, frame, CV_BGR2RGB);
         circle(frame, head_point, 10, Scalar(0,255,0));
         
         cv::imshow("OpenCV", frame);
