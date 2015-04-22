@@ -55,7 +55,6 @@
             <linkerLibFileItem>OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libOniFile.so</linkerLibFileItem>
             <linkerLibFileItem>OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPS1080.so</linkerLibFileItem>
             <linkerLibFileItem>OpenNI2/Bin/x64-Release/OpenNI2/Drivers/libPSLink.so</linkerLibFileItem>
-            <linkerLibLibItem>OpenNI2</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
     cv::Mat frame = cv::Mat::zeros(cv::Size(320, 240), CV_8UC3);
 
     cv::namedWindow("OpenCV", CV_WINDOW_KEEPRATIO);
+    cv::namedWindow("swap", CV_WINDOW_KEEPRATIO);
 
 
 
@@ -144,25 +145,65 @@ int main(int argc, char** argv) {
             } else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED) {
                 heads[i] = user.getSkeleton().getJoint(nite::JOINT_HEAD);
                 if (heads[i].getPositionConfidence() > .5) {
-                    printf("%d. (%5.2f, %5.2f, %5.2f)\n", user.getId(), heads[i].getPosition().x, heads[i].getPosition().y, heads[i].getPosition().z);
+                    //                    printf("%d. (%5.2f, %5.2f, %5.2f)\n", user.getId(), heads[i].getPosition().x, heads[i].getPosition().y, heads[i].getPosition().z);
 
                     int X, Y;
                     openni::DepthPixel Z;
                     openni::CoordinateConverter::convertWorldToDepth(depth, heads[i].getPosition().x, heads[i].getPosition().y, heads[i].getPosition().z, &X, &Y, &Z);
                     Point head_point = cv::Point(X, Y);
                     circle(frame, head_point, 10, Scalar(0, 255, 0));
+
+
+
+
                 }
 
             }
         }
+        cv::Mat swap = cv::Mat::zeros(cv::Size(320, 240), CV_8UC3);
+        if (users.getSize() > 1) {
+            Point upperCorner[2];
+            Point lowerCorner[2];
+            for (int i = 0; i < 2; i++) {
+                openni::DepthPixel Z;
+                double upperCornerX = heads[i].getPosition().x + 75.0;
+                double upperCornerY = heads[i].getPosition().y + 112.5;
+                double lowerCornerX = heads[i].getPosition().x - 75.0;
+                double lowerCornerY = heads[i].getPosition().y - 112.5;
 
-        double head_pts[2][2][24];           //][x,y][head1, head2][point1...point24]
-        if(users.getSize() > 1){
-            
+
+                openni::CoordinateConverter::convertWorldToDepth(depth, upperCornerX, upperCornerY, heads[i].getPosition().z, &upperCorner[i].x, &upperCorner[i].y, &Z);
+                openni::CoordinateConverter::convertWorldToDepth(depth, lowerCornerX, lowerCornerY, heads[i].getPosition().z, &lowerCorner[i].x, &lowerCorner[i].y, &Z);
+                printf("%d: (%d, %d); (%d, %d)\n", i, lowerCorner[i].x, lowerCorner[i].y, upperCorner[i].x, upperCorner[i].y);
+            }
+            swap = frame.clone();
+
+
+            Point length_1;
+            length_1.x = upperCorner[1].x - lowerCorner[1].x;
+            length_1.y = lowerCorner[1].y - upperCorner[1].y;
+
+            //            Point length_2 = upperCorner[2] - lowerCorner[2];
+            printf("%d, %d\n", length_1.x, length_1.y);
+
+            for (int i = 0; i < length_1.x; i++) {
+                for (int j = 0; j < length_1.y; j++) {
+
+                    if (i + lowerCorner[1].x < 320 || i + lowerCorner[2].x < 320 || j + lowerCorner[1].y < 240 || j + lowerCorner[2].y < 240) {
+                        swap.at<cv::Vec3b>(i + lowerCorner[2].x, j + lowerCorner[2].y) = frame.at<cv::Vec3b>(i + lowerCorner[1].x, j + lowerCorner[1].y);
+
+                        swap.at<cv::Vec3b>(i + lowerCorner[1].x, j + lowerCorner[1].y) = frame.at<cv::Vec3b>(i + lowerCorner[2].x, j + lowerCorner[2].y);
+
+                    }
+
+                }
+            }
         }
 
 
         cv::imshow("OpenCV", frame);
+        cv::imshow("swap", swap);
+
 
         c = cv::waitKey(10);
         if (c == 27)
